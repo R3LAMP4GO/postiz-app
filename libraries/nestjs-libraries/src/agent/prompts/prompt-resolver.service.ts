@@ -62,6 +62,10 @@ export class PromptResolverService {
     return process.env.CUSTOM_PROMPTS_PATH || '/app/custom-prompts';
   }
 
+  private get examplesPath(): string {
+    return process.env.EXAMPLES_YAML_PATH || join(this.basePath, 'examples.yaml');
+  }
+
   private get includeExamples(): boolean {
     return process.env.INCLUDE_EXAMPLES !== 'false';
   }
@@ -154,7 +158,7 @@ export class PromptResolverService {
 
     if (!this.examplesPool) {
       try {
-        const raw = await fs.readFile(join(this.basePath, 'examples.yaml'), 'utf8');
+        const raw = await fs.readFile(this.examplesPath, 'utf8');
         this.examplesPool = parseYaml(raw) ?? {};
       } catch {
         this.examplesPool = {};

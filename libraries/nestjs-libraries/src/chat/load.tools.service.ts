@@ -6,6 +6,7 @@ import { pStore } from '@gitroom/nestjs-libraries/chat/mastra.store';
 import { array, object, string } from 'zod';
 import { ModuleRef } from '@nestjs/core';
 import { toolList } from '@gitroom/nestjs-libraries/chat/tools/tool.list';
+import { PromptResolverService } from '@gitroom/nestjs-libraries/agent/prompts/prompt-resolver.service';
 import dayjs from 'dayjs';
 
 export const AgentState = object({
@@ -19,7 +20,10 @@ const renderArray = (list: string[], show: boolean) => {
 
 @Injectable()
 export class LoadToolsService {
-  constructor(private _moduleRef: ModuleRef) {}
+  constructor(
+    private _moduleRef: ModuleRef,
+    private _promptResolver: PromptResolverService
+  ) {}
 
   async loadTools() {
     return (
@@ -42,13 +46,28 @@ export class LoadToolsService {
 
   async agent() {
     const tools = await this.loadTools();
+    const resolver = this._promptResolver;
     return new Agent({
       id: 'postiz',
       name: 'postiz',
       description: 'Agent that helps manage and schedule social media posts for users',
-      instructions: ({ requestContext }) => {
+      instructions: async ({ requestContext }) => {
         const ui: string = requestContext.get('ui' as never);
-        return `
+        const integrations = requestContext.get('integrations' as never) as
+          | Array<{ platform?: string } | string>
+          | undefined;
+        let orgId: string | undefined;
+        try {
+          const orgRaw = requestContext.get('organization' as never) as string | undefined;
+          orgId = orgRaw ? JSON.parse(orgRaw)?.id : undefined;
+        } catch {
+          orgId = undefined;
+        }
+        const platformBlock = await resolver.loadRulesForIntegrations(integrations, orgId);
+        const prefix = platformBlock
+          ? `# Channel-specific guidelines (follow strictly)\n\n${platformBlock}\n\n---\n\n`
+          : '';
+        return `${prefix}
       Global information:
         - Date (UTC): ${dayjs().format('YYYY-MM-DD HH:mm:ss')}
 

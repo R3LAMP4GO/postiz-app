@@ -111,6 +111,9 @@ services:
     volumes:
       - postiz-config:/config/
       - postiz-uploads:/uploads/
+      # Optional: mount per-platform YAML rule checklists (enables channel-specific AI prompts)
+      # - /path/to/your/checklists:/app/custom-prompts:ro
+      # - /path/to/your/examples.yaml:/app/custom-prompts/examples.yaml:ro
     ports:
       - "4007:5000"
     networks:

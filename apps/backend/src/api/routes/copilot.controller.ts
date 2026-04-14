@@ -14,13 +14,11 @@ import {
   copilotRuntimeNodeHttpEndpoint,
   copilotRuntimeNextJSAppRouterEndpoint,
 } from '@copilotkit/runtime';
-import OpenAI from 'openai';
 
+// OpenAIAdapter internally creates an OpenAI client that reads
+// OPENAI_API_KEY + OPENAI_BASE_URL from process.env automatically,
+// so setting those env vars routes this through the configured endpoint.
 const COPILOT_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1';
-const copilotOpenAI = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  baseURL: process.env.OPENAI_BASE_URL,
-});
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
 import { Organization } from '@prisma/client';
 import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
@@ -58,7 +56,6 @@ export class CopilotController {
       runtime: new CopilotRuntime(),
       serviceAdapter: new OpenAIAdapter({
         model: COPILOT_MODEL,
-        openai: copilotOpenAI,
       }),
     });
 
@@ -105,7 +102,6 @@ export class CopilotController {
       // properties: req.body.variables.properties,
       serviceAdapter: new OpenAIAdapter({
         model: COPILOT_MODEL,
-        openai: copilotOpenAI,
       }),
     });
 

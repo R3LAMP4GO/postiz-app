@@ -6,14 +6,12 @@ import SafeImage from '@gitroom/react/helpers/safe.image';
 import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
 import { useShallow } from 'zustand/react/shallow';
 import { useExistingData } from '@gitroom/frontend/components/launches/helpers/use.existing.data';
-import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import ImageWithFallback from '@gitroom/react/helpers/image.with.fallback';
 
 export const PicksSocialsComponent: FC<{ toolTip?: boolean }> = ({
   toolTip,
 }) => {
-  const exising = useExistingData();
-
+  const existing = useExistingData();
   const {
     locked,
     addOrRemoveSelectedIntegration,
@@ -29,78 +27,85 @@ export const PicksSocialsComponent: FC<{ toolTip?: boolean }> = ({
   );
 
   return (
-    <div className={clsx('flex', locked && 'opacity-50 pointer-events-none')}>
-      <div className="flex flex-1">
-        <div className="innerComponent flex-1 flex">
-          <div className="flex flex-wrap gap-[12px] flex-1">
-            {integrations
-              .filter((f) => {
-                if (exising.integration) {
-                  return f.id === exising.integration;
-                }
-                return !f.inBetweenSteps && !f.disabled;
-              })
-              .map((integration) => (
-                <div
-                  key={integration.id}
-                  className="flex gap-[8px] items-center"
-                  {...(toolTip && {
-                    'data-tooltip-id': 'tooltip',
-                    'data-tooltip-content': integration.name,
-                  })}
-                >
-                  <div
-                    onClick={() => {
-                      if (exising.integration) {
-                        return;
-                      }
-                      addOrRemoveSelectedIntegration(integration, {});
-                    }}
-                    className={clsx(
-                      'cursor-pointer border-[2px] relative rounded-full flex justify-center items-center bg-fifth filter transition-all duration-500',
-                      selectedIntegrations.findIndex(
-                        (p) => p.integration.id === integration.id
-                      ) === -1
-                        ? 'grayscale border-transparent'
-                        : 'border-[#622FF6]'
-                    )}
-                  >
-                    <ImageWithFallback
-                      fallbackSrc="/no-picture.jpg"
-                      src={integration.picture || '/no-picture.jpg'}
-                      className={clsx(
-                        'rounded-full transition-all min-w-[42px] border-[1.5px] min-h-[42px]',
-                        selectedIntegrations.findIndex(
-                          (p) => p.integration.id === integration.id
-                        ) === -1
-                          ? 'border-transparent'
-                          : 'border-[#000]'
-                      )}
-                      alt={integration.identifier}
-                      width={42}
-                      height={42}
-                    />
-                    {integration.identifier === 'youtube' ? (
-                      <img
-                        src="/icons/platforms/youtube.svg"
-                        className="absolute z-10 bottom-0 -end-[5px] min-w-[16px]"
-                        width={16}
-                      />
-                    ) : (
-                      <SafeImage
-                        src={`/icons/platforms/${integration.identifier}.png`}
-                        className="rounded-[4px] absolute z-10 bottom-0 -end-[5px] min-w-[16px] min-h-[16px]"
-                        alt={integration.identifier}
-                        width={16}
-                        height={16}
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      </div>
+    <div
+      className="flex flex-wrap gap-[10px]"
+      role="group"
+      aria-label="Destinations"
+    >
+      {integrations
+        .filter((integration) => {
+          if (existing.integration) {
+            return integration.id === existing.integration;
+          }
+          return !integration.inBetweenSteps && !integration.disabled;
+        })
+        .map((integration) => {
+          const selected = selectedIntegrations.some(
+            (item) => item.integration.id === integration.id
+          );
+          const platformName = integration.identifier.split('-')[0];
+          const accessibleName = `${integration.name}, ${platformName}`;
+
+          return (
+            <button
+              type="button"
+              key={integration.id}
+              aria-pressed={selected}
+              aria-label={`${selected ? 'Remove' : 'Add'} ${accessibleName}`}
+              disabled={locked || Boolean(existing.integration)}
+              onClick={() => addOrRemoveSelectedIntegration(integration, {})}
+              className={clsx(
+                'min-h-[44px] max-w-full rounded-[8px] border px-[10px] py-[5px] flex items-center gap-[10px] text-start outline-none transition-[border-color,background-color,color] duration-200 focus-visible:ring-2 focus-visible:ring-[#EF4444] focus-visible:ring-offset-2 focus-visible:ring-offset-newBgColor disabled:cursor-not-allowed disabled:opacity-60',
+                selected
+                  ? 'border-[#EF4444] bg-newBgLineColor text-textColor'
+                  : 'border-newBorder bg-newBgColorInner text-[#A3A3A3] hover:border-[#A3A3A3]'
+              )}
+              {...(toolTip && {
+                'data-tooltip-id': 'tooltip',
+                'data-tooltip-content': accessibleName,
+              })}
+            >
+              <span className="relative shrink-0">
+                <ImageWithFallback
+                  fallbackSrc="/no-picture.jpg"
+                  src={integration.picture || '/no-picture.jpg'}
+                  className="rounded-full size-[32px] object-cover"
+                  alt=""
+                  width={32}
+                  height={32}
+                />
+                {integration.identifier === 'youtube' ? (
+                  <img
+                    src="/icons/platforms/youtube.svg"
+                    className="absolute z-10 -bottom-[2px] -end-[4px] size-[14px]"
+                    width={14}
+                    height={14}
+                    alt=""
+                  />
+                ) : (
+                  <SafeImage
+                    src={`/icons/platforms/${integration.identifier}.png`}
+                    className="rounded-[3px] absolute z-10 -bottom-[2px] -end-[4px] size-[14px]"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
+                )}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[13px] font-[600]">
+                  {integration.name}
+                </span>
+                <span className="block text-[11px] capitalize text-[#A3A3A3]">
+                  {platformName}
+                </span>
+              </span>
+              <span className="sr-only">
+                {selected ? 'Selected' : 'Not selected'}
+              </span>
+            </button>
+          );
+        })}
     </div>
   );
 };

@@ -1,25 +1,40 @@
 import { FC } from 'react';
 import { clsx } from 'clsx';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+
 export const VideoOrImage: FC<{
   src: string;
   autoplay: boolean;
+  interactive?: boolean;
   isContain?: boolean;
   imageClassName?: string;
   videoClassName?: string;
 }> = (props) => {
-  const { src, autoplay, isContain, imageClassName, videoClassName } = props;
+  const {
+    src,
+    autoplay,
+    interactive = false,
+    isContain,
+    imageClassName,
+    videoClassName,
+  } = props;
+
   if (hasExtension(src, 'mp4')) {
     return (
       <video
         src={src}
-        autoPlay={autoplay}
+        autoPlay={interactive ? false : autoplay}
+        controls={interactive}
+        muted={!interactive}
+        loop={!interactive}
+        playsInline
+        preload="metadata"
+        aria-label={interactive ? 'Video preview' : undefined}
         className={clsx('w-full h-full', videoClassName)}
-        muted={true}
-        loop={true}
       />
     );
   }
+
   return (
     <img
       className={clsx(
@@ -28,6 +43,7 @@ export const VideoOrImage: FC<{
         imageClassName
       )}
       src={src}
+      alt="Post media preview"
     />
   );
 };

@@ -67,14 +67,19 @@ export const TiktokPreview: FC<{
               href={mediaDir.set(image.path)}
               target="_blank"
             >
-              <VideoOrImage autoplay={true} src={mediaDir.set(image.path)} />
+              <VideoOrImage
+                autoplay={false}
+                interactive
+                src={mediaDir.set(image.path)}
+              />
             </a>
           ))}
           className="h-full bg-black aspect-[calc(9/16)] rounded-[3px] overflow-hidden"
         />
         <div className="absolute pointer-events-none w-full h-full start-0 top-0 px-[12px] py-[25px] justify-end items-start text-white flex flex-col">
           <div className="text-[14px] font-[500]">@{integration?.name}</div>
-          <div className="text-[13px] font-[400] whitespace-pre-line line-clamp-6 w-full"
+          <div
+            className="text-[13px] font-[400] whitespace-pre-line line-clamp-6 w-full"
             dangerouslySetInnerHTML={{ __html: renderContent?.[0]?.text || '' }}
           />
         </div>

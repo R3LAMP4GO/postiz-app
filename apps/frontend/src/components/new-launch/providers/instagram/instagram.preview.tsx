@@ -71,7 +71,11 @@ export const InstagramPreview: FC<{
               href={mediaDir.set(image.path)}
               target="_blank"
             >
-              <VideoOrImage autoplay={true} src={mediaDir.set(image.path)} />
+              <VideoOrImage
+                autoplay={false}
+                interactive
+                src={mediaDir.set(image.path)}
+              />
             </a>
           ))}
         />

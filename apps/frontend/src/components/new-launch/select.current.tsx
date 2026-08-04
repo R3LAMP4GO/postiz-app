@@ -1,56 +1,17 @@
 'use client';
 
-import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
-import {
-  SelectedIntegrations,
-  useLaunchStore,
-} from '@gitroom/frontend/components/new-launch/store';
+import { FC, useCallback } from 'react';
+import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
 import clsx from 'clsx';
 import SafeImage from '@gitroom/react/helpers/safe.image';
 import { useShallow } from 'zustand/react/shallow';
-import { GlobalIcon } from '@gitroom/frontend/components/ui/icons';
-import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { Integrations } from '@gitroom/frontend/components/launches/calendar.context';
-import {
-  useDecisionModal,
-  useModals,
-} from '@gitroom/frontend/components/layout/new-modal';
+import { useDecisionModal } from '@gitroom/frontend/components/layout/new-modal';
 
-export function useHasScroll(ref: RefObject<HTMLElement | null>): boolean {
-  const [hasHorizontalScroll, setHasHorizontalScroll] = useState(false);
-
-  useEffect(() => {
-    if (!ref.current) return;
-
-    const checkScroll = () => {
-      const el = ref.current;
-      if (el) {
-        setHasHorizontalScroll(el.scrollWidth > el.clientWidth);
-      }
-    };
-
-    checkScroll(); // initial check
-
-    const resizeObserver = new ResizeObserver(checkScroll);
-    resizeObserver.observe(ref.current);
-
-    const mutationObserver = new MutationObserver(checkScroll);
-    mutationObserver.observe(ref.current, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-
-    return () => {
-      resizeObserver.disconnect();
-      mutationObserver.disconnect();
-    };
-  }, [ref]);
-
-  return hasHorizontalScroll;
-}
-
-export const SelectCurrent: FC = () => {
+export const SelectCurrent: FC<{
+  compact?: boolean;
+  ariaLabel?: string;
+}> = ({ compact = false, ariaLabel = 'Selected platforms' }) => {
   const modals = useDecisionModal();
   const {
     selectedIntegrations,
@@ -70,125 +31,114 @@ export const SelectCurrent: FC = () => {
     }))
   );
 
-  const contentRef = useRef<HTMLDivElement>(null);
-  const hasScroll = useHasScroll(contentRef);
-
   const removeSocial = useCallback(
-    (sIntegration: Integrations) => async (e: any) => {
-      e.stopPropagation();
-      e.preventDefault();
-      const open = await modals.open({
+    (integration: Integrations) => async () => {
+      const confirmed = await modals.open({
         title: 'Remove Social Account',
         description:
           'Are you sure you want to remove this social from scheduling?',
       });
 
-      if (!open) {
-        return;
+      if (confirmed) {
+        addOrRemoveSelectedIntegration(integration, {});
       }
-
-      addOrRemoveSelectedIntegration(sIntegration, {});
     },
-    []
+    [addOrRemoveSelectedIntegration, modals]
   );
 
+  if (selectedIntegrations.length === 0) {
+    return null;
+  }
+
   return (
-    <>
-      <div className="select-none left-0 absolute w-full z-[100] px-[20px]">
-        <div
-          ref={contentRef}
-          className={clsx(
-            'flex gap-[6px] w-full overflow-x-auto scrollbar scrollbar-thumb-tableBorder scrollbar-track-secondary',
-            locked && 'opacity-50 pointer-events-none'
-          )}
-        >
+    <div
+      role="tablist"
+      aria-label={ariaLabel}
+      className={clsx(
+        'flex w-full gap-[8px] overflow-x-auto pb-[4px] scrollbar scrollbar-thumb-tableBorder scrollbar-track-secondary',
+        locked && 'opacity-60'
+      )}
+    >
+      {selectedIntegrations.map(({ integration }) => {
+        const selected = current === integration.id;
+        const platformName = integration.identifier.split('-')[0];
+        const label = `${integration.name}, ${platformName}`;
+
+        return (
           <div
-            onClick={() => {
-              setHide(true);
-              setCurrent('global');
-            }}
+            key={integration.id}
             className={clsx(
-              'cursor-pointer flex gap-[8px] rounded-[8px] w-[40px] h-[40px] justify-center items-center bg-newBgLineColor',
-              current !== 'global'
-                ? 'text-[#A3A3A3]'
-                : 'border border-[#FC69FF] text-[#FC69FF]'
+              'shrink-0 flex rounded-[8px] border bg-newBgLineColor',
+              selected ? 'border-[#EF4444]' : 'border-transparent'
             )}
           >
-            <div>
-              <GlobalIcon />
-            </div>
-          </div>
-          {selectedIntegrations.map(({ integration }) => (
-            <div
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              aria-label={`Show ${label}`}
+              disabled={locked}
               onClick={() => {
                 setHide(true);
                 setCurrent(integration.id);
               }}
-              key={integration.id}
               className={clsx(
-                'border cursor-pointer relative flex gap-[8px] w-[40px] h-[40px] rounded-[8px] items-center bg-newBgLineColor justify-center',
-                current === integration.id
-                  ? 'border-[#FC69FF] text-[#FC69FF]'
-                  : 'border-transparent'
+                'min-h-[44px] min-w-[44px] px-[8px] flex items-center gap-[8px] rounded-[7px] outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444] focus-visible:ring-inset disabled:cursor-not-allowed',
+                selected ? 'text-[#EF4444]' : 'text-textColor'
               )}
             >
-              <div
-                onClick={removeSocial(integration)}
-                className="absolute justify-center items-center flex w-[8px] h-[8px] -top-[1px] -start-[3px] bg-red-500 rounded-full text-white text-[8px]"
-              >
-                X
-              </div>
-              <IsGlobal id={integration.id} />
-              <div
-                {...{
-                  'data-tooltip-id': 'tooltip',
-                  'data-tooltip-content': integration.name,
-                }}
-                className={clsx(
-                  'relative w-full h-full rounded-full flex justify-center items-center filter transition-all duration-500'
-                )}
-              >
+              <span className="relative shrink-0">
                 <SafeImage
                   src={integration.picture || '/no-picture.jpg'}
-                  className="rounded-full min-w-[26px]"
-                  alt={integration.identifier}
+                  className="rounded-full size-[26px] object-cover"
+                  alt=""
                   width={26}
                   height={26}
-                  onError={(e) => {
-                    e.currentTarget.src = '/no-picture.jpg';
-                    e.currentTarget.srcset = '/no-picture.jpg';
+                  onError={(event) => {
+                    event.currentTarget.src = '/no-picture.jpg';
+                    event.currentTarget.srcset = '/no-picture.jpg';
                   }}
                 />
-                {integration.identifier === 'youtube' ? (
-                  <img
-                    src="/icons/platforms/youtube.svg"
-                    className="absolute z-10 bottom-[2px] end-[2px] min-w-[12px]"
-                    width={12}
-                  />
-                ) : (
-                  <SafeImage
-                    src={`/icons/platforms/${integration.identifier}.png`}
-                    className="min-w-[12px] min-h-[12px] rounded-[3px] absolute z-10 bottom-[6px] end-[6px]"
-                    alt={integration.identifier}
-                    width={12}
-                    height={12}
-                  />
+                <SafeImage
+                  src={`/icons/platforms/${integration.identifier}.png`}
+                  className="rounded-[3px] absolute z-10 -bottom-[2px] -end-[3px] size-[12px]"
+                  alt=""
+                  width={12}
+                  height={12}
+                />
+              </span>
+              <span
+                className={clsx(
+                  'max-w-[150px] truncate text-[13px] font-[600]',
+                  compact && 'hidden sm:block'
                 )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className={clsx(hasScroll ? 'h-[55px]' : 'h-[40px]')} />
-    </>
+              >
+                {integration.name}
+              </span>
+              <IsGlobal id={integration.id} />
+            </button>
+            {!compact && (
+              <button
+                type="button"
+                aria-label={`Remove ${label}`}
+                disabled={locked}
+                onClick={removeSocial(integration)}
+                className="min-h-[44px] min-w-[36px] px-[8px] rounded-e-[7px] text-[#FF3F3F] outline-none hover:bg-newColColor focus-visible:ring-2 focus-visible:ring-[#EF4444] focus-visible:ring-inset disabled:cursor-not-allowed"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
 export const IsGlobal: FC<{ id: string }> = ({ id }) => {
-  const t = useT();
   const { isInternal } = useLaunchStore(
     useShallow((state) => ({
-      isInternal: !!state.internal.find((p) => p.integration.id === id),
+      isInternal: state.internal.some((item) => item.integration.id === id),
     }))
   );
 
@@ -197,13 +147,9 @@ export const IsGlobal: FC<{ id: string }> = ({ id }) => {
   }
 
   return (
-    <div
-      data-tooltip-id="tooltip"
-      data-tooltip-content={t(
-        'no_longer_global_mode',
-        'No longer in global mode'
-      )}
-      className="w-[8px] h-[8px] bg-[#FC69FF] -top-[1px] -end-[3px] absolute rounded-full"
+    <span
+      className="size-[8px] shrink-0 rounded-full bg-[#EF4444]"
+      aria-label="Customized content"
     />
   );
 };

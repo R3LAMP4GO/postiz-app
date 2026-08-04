@@ -1,22 +1,29 @@
 'use client';
-import { FC, ReactNode, useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useTranslationSettings } from '@gitroom/react/translation/get.transation.service.client';
+
+const getDirection = (language?: string) =>
+  ['he', 'ar'].includes((language || '').split('-')[0]) ? 'rtl' : 'ltr';
 
 export const HtmlComponent: FC = () => {
   const settings = useTranslationSettings();
-  const [dir, setDir] = useState(settings.dir());
+  const [dir, setDir] = useState(() =>
+    getDirection(settings.resolvedLanguage || settings.language)
+  );
 
   useEffect(() => {
-    settings.on('languageChanged', (lng) => {
-      setDir(settings.dir());
-    });
-  }, []);
+    const handleLanguageChange = (language: string) => {
+      setDir(getDirection(language));
+    };
+
+    settings.on('languageChanged', handleLanguageChange);
+    return () => {
+      settings.off('languageChanged', handleLanguageChange);
+    };
+  }, [settings]);
 
   useEffect(() => {
-    const htmlElement = document.querySelector('html');
-    if (htmlElement) {
-      htmlElement.setAttribute('dir', dir);
-    }
+    document.documentElement.setAttribute('dir', dir);
   }, [dir]);
 
   return null;

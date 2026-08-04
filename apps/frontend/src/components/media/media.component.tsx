@@ -25,14 +25,10 @@ import { VideoFrame } from '@gitroom/react/helpers/video.frame';
 import { useUppyUploader } from '@gitroom/frontend/components/media/new.uploader';
 import dynamic from 'next/dynamic';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
-import { AiImage } from '@gitroom/frontend/components/launches/ai.image';
 import { DropFiles } from '@gitroom/frontend/components/layout/drop.files';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-import { ThirdPartyMedia } from '@gitroom/frontend/components/third-parties/third-party.media';
 import { ReactSortable } from 'react-sortablejs';
-import { MediaComponentInner } from '@gitroom/frontend/components/launches/helpers/media.settings.component';
-import { AiVideo } from '@gitroom/frontend/components/launches/ai.video';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { ThirdPartyMediaLibrary } from '@gitroom/frontend/components/third-parties/third-party.media-library';
 import { Dashboard } from '@uppy/react';
@@ -43,14 +39,9 @@ import {
   DeleteCircleIcon,
   CloseCircleIcon,
   DragHandleIcon,
-  MediaSettingsIcon,
   InsertMediaIcon,
-  DesignMediaIcon,
-  VerticalDividerIcon,
   NoMediaIcon,
 } from '@gitroom/frontend/components/ui/icons';
-import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
-import { useShallow } from 'zustand/react/shallow';
 import { LoadingComponent } from '@gitroom/frontend/components/layout/loading';
 import { useDebounce } from 'use-debounce';
 const Polonto = dynamic(
@@ -408,21 +399,24 @@ export const MediaBox: FC<{
         ) : (
           <PlusIcon size={14} />
         )}
-        <div className={loading ? 'invisible' : undefined}>{t('upload', 'Upload')}</div>
+        <div className={loading ? 'invisible' : undefined}>
+          {t('upload', 'Upload')}
+        </div>
       </button>
     );
   }, [t, loading]);
 
   return (
-    <DropFiles disabled={loading} className="flex flex-col flex-1" onDrop={dragAndDrop}>
+    <DropFiles
+      disabled={loading}
+      className="flex flex-col flex-1"
+      onDrop={dragAndDrop}
+    >
       <div className="flex flex-col flex-1">
         <div
           className={clsx(
             'flex items-center gap-[12px]',
-            !isLoading &&
-              !data?.results?.length &&
-              !debouncedSearch &&
-              'hidden'
+            !isLoading && !data?.results?.length && !debouncedSearch && 'hidden'
           )}
         >
           <div className="flex-1">
@@ -431,7 +425,7 @@ export const MediaBox: FC<{
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('search_media_by_name', 'Search by file name')}
-              className="w-full h-[44px] px-[14px] rounded-[8px] bg-newBgColorInner border border-newColColor text-[14px] outline-none focus:border-[#612BD3]"
+              className="w-full h-[44px] px-[14px] rounded-[8px] bg-newBgColorInner border border-newColColor text-[14px] outline-none focus:border-[#7F1D1D]"
             />
           </div>
           <input
@@ -483,10 +477,7 @@ export const MediaBox: FC<{
                 <NoMediaIcon />
                 <div className="text-[20px] font-[600]">
                   {debouncedSearch
-                    ? t(
-                        'no_media_match_search',
-                        'No media matches your search'
-                      )
+                    ? t('no_media_match_search', 'No media matches your search')
                     : t(
                         'you_dont_have_any_media_yet',
                         "You don't have any media yet"
@@ -544,13 +535,13 @@ export const MediaBox: FC<{
                     className={clsx(
                       'w-full h-full rounded-[6px] border-[4px] relative',
                       !!selected.find((p) => p.id === media.id)
-                        ? 'border-[#612BD3]'
+                        ? 'border-[#7F1D1D]'
                         : 'border-transparent'
                     )}
                     onClick={addRemoveSelected(media)}
                   >
                     {!!selected.find((p: any) => p.id === media.id) ? (
-                      <div className="text-white flex z-[101] justify-center items-center text-[14px] font-[500] w-[24px] h-[24px] rounded-full bg-[#612BD3] absolute -bottom-[10px] -end-[10px]">
+                      <div className="text-white flex z-[101] justify-center items-center text-[14px] font-[500] w-[24px] h-[24px] rounded-full bg-[#7F1D1D] absolute -bottom-[10px] -end-[10px]">
                         {selected.findIndex((z: any) => z.id === media.id) + 1}
                       </div>
                     ) : (
@@ -559,7 +550,9 @@ export const MediaBox: FC<{
                         onClick={deleteImage(media)}
                       />
                     )}
-                    <div className="absolute bottom-[10px] end-[10px] z-[100]">{media.originalName}</div>
+                    <div className="absolute bottom-[10px] end-[10px] z-[100]">
+                      {media.originalName}
+                    </div>
                     <div className="w-full h-full rounded-[6px] overflow-hidden relative">
                       <div className="absolute z-[20] left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%]">
                         <div
@@ -616,7 +609,7 @@ export const MediaBox: FC<{
               <button
                 onClick={standalone ? () => {} : addMedia}
                 disabled={selected.length === 0}
-                className="cursor-pointer text-white disabled:opacity-80 disabled:cursor-not-allowed h-[52px] px-[20px] items-center justify-center bg-[#612BD3] flex rounded-[10px]"
+                className="cursor-pointer text-white disabled:opacity-80 disabled:cursor-not-allowed h-[52px] px-[20px] items-center justify-center bg-[#7F1D1D] flex rounded-[10px]"
               >
                 {t('add_selected_media', 'Add selected media')}
               </button>
@@ -670,13 +663,11 @@ export const MultiMediaComponent: FC<{
     text,
     onChange,
     value,
-    allData,
-    dummy,
     toolBar,
     information,
     mediaNotAvailable,
   } = props;
-  const user = useUser();
+  const toaster = useToaster();
   const modals = useModals();
   const t = useT();
   useEffect(() => {
@@ -739,18 +730,42 @@ export const MultiMediaComponent: FC<{
     [currentMedia]
   );
 
-  const designMedia = useCallback(() => {
-    if (!!user?.tier?.ai && !dummy) {
-      modals.openModal({
-        askClose: false,
-        title: t('design_media', 'Design Media'),
-        size: '80%',
-        children: (close) => (
-          <Polonto setMedia={changeMedia} closeModal={close} />
-        ),
-      });
-    }
-  }, [changeMedia, t]);
+  const uploaderRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const uppy = useUppyUploader({
+    allowedFileTypes: 'image/*,video/mp4',
+    onUploadSuccess: (uploadedMedia: any) => {
+      changeMedia(uploadedMedia);
+      uppy.clear();
+    },
+    onStart: () => setUploading(true),
+    onEnd: () => setUploading(false),
+  });
+
+  const uploadFiles = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      const totalSize = files.reduce((total, file) => total + file.size, 0);
+
+      if (totalSize > MAX_UPLOAD_SIZE) {
+        toaster.show(
+          t(
+            'upload_size_limit_exceeded',
+            'Upload size limit exceeded. Maximum 1 GB per upload session.'
+          ),
+          'warning'
+        );
+        event.target.value = '';
+        return;
+      }
+
+      // @ts-ignore Uppy accepts native File objects from browser inputs.
+      uppy.addFiles(files);
+
+      event.target.value = '';
+    },
+    [uppy, toaster, t]
+  );
 
   return (
     <>
@@ -768,104 +783,64 @@ export const MultiMediaComponent: FC<{
               handle=".dragging"
             >
               {currentMedia.map((media, index) => (
-                  <div key={media.id} className="cursor-pointer rounded-[5px] w-[40px] h-[40px] border-2 border-tableBorder relative flex transition-all">
-                    <DragHandleIcon className="z-[20] dragging absolute pe-[1px] pb-[3px] -start-[4px] -top-[4px] cursor-move" />
+                <div
+                  key={media.id}
+                  className="cursor-pointer rounded-[5px] w-[40px] h-[40px] border-2 border-tableBorder relative flex transition-all"
+                >
+                  <DragHandleIcon className="z-[20] dragging absolute pe-[1px] pb-[3px] -start-[4px] -top-[4px] cursor-move" />
 
-                    <div className="w-full h-full relative group">
-                      <div
-                        onClick={async () => {
-                          modals.openModal({
-                            title: t('media_settings', 'Media Settings'),
-                            children: (close) => (
-                              <MediaComponentInner
-                                media={media as any}
-                                onClose={close}
-                                onSelect={(value: any) => {
-                                  onChange({
-                                    target: {
-                                      name: 'upload',
-                                      value: currentMedia.map((p) => {
-                                        if (p.id === media.id) {
-                                          return {
-                                            ...p,
-                                            ...value,
-                                          };
-                                        }
-                                        return p;
-                                      }),
-                                    },
-                                  });
-                                }}
-                              />
-                            ),
-                          });
-                        }}
-                        className="absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] bg-black/80 rounded-[10px] opacity-0 group-hover:opacity-100 transition-opacity z-[9]"
-                      >
-                        <MediaSettingsIcon className="cursor-pointer relative z-[200]" />
-                      </div>
-                      {hasExtension(media?.path, 'mp4') ? (
-                        <VideoFrame url={mediaDirectory.set(media?.path)} />
-                      ) : (
-                        <img
-                          className="w-full h-full object-cover rounded-[4px]"
-                          src={mediaDirectory.set(media?.path)}
-                        />
-                      )}
-                    </div>
-
-                    <CloseCircleIcon
-                      onClick={clearMedia(index)}
-                      className="absolute -end-[4px] -top-[4px] z-[20] rounded-full bg-white"
-                    />
+                  <div className="w-full h-full relative">
+                    {hasExtension(media?.path, 'mp4') ? (
+                      <VideoFrame url={mediaDirectory.set(media?.path)} />
+                    ) : (
+                      <img
+                        className="w-full h-full object-cover rounded-[4px]"
+                        src={mediaDirectory.set(media?.path)}
+                      />
+                    )}
                   </div>
+
+                  <CloseCircleIcon
+                    onClick={clearMedia(index)}
+                    className="absolute -end-[4px] -top-[4px] z-[20] rounded-full bg-white"
+                  />
+                </div>
               ))}
             </ReactSortable>
           )}
         </div>
-        <div className="flex gap-[8px] px-[12px] border-t border-newColColor w-full b1 text-textColor">
+        <div className="flex flex-wrap gap-[8px] px-[12px] border-t border-newColColor w-full b1 text-textColor">
           {!mediaNotAvailable && (
-            <div className="flex py-[10px] b2 items-center gap-[4px]">
-              <div
+            <div className="flex flex-wrap py-[10px] b2 items-center gap-[8px]">
+              <input
+                ref={uploaderRef}
+                type="file"
+                accept="image/*,video/mp4"
+                multiple
+                disabled={uploading}
+                onChange={uploadFiles}
+                className="sr-only"
+                aria-label={t('upload_files', 'Upload files')}
+              />
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => uploaderRef.current?.click()}
+                className="min-h-[44px] rounded-[8px] bg-newColColor px-[12px] flex items-center gap-[8px] text-[12px] font-[600] outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444] disabled:cursor-wait disabled:opacity-60"
+              >
+                <PlusIcon size={14} />
+                {uploading
+                  ? t('uploading', 'Uploading…')
+                  : t('upload_files', 'Upload files')}
+              </button>
+              <button
+                type="button"
                 onClick={showModal}
-                className="cursor-pointer h-[30px] rounded-[6px] justify-center items-center flex bg-newColColor px-[8px]"
+                className="min-h-[44px] rounded-[8px] bg-newColColor px-[12px] flex items-center gap-[8px] text-[12px] font-[600] outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444]"
               >
-                <div className="flex gap-[8px] items-center">
-                  <div>
-                    <InsertMediaIcon />
-                  </div>
-                  <div className="text-[10px] font-[600] maxMedia:hidden block">
-                    {t('insert_media', 'Insert Media')}
-                  </div>
-                </div>
-              </div>
-              <div
-                onClick={designMedia}
-                className="cursor-pointer h-[30px] rounded-[6px] justify-center items-center flex bg-newColColor px-[8px]"
-              >
-                <div className="flex gap-[5px] items-center">
-                  <div>
-                    <DesignMediaIcon />
-                  </div>
-                  <div className="text-[10px] font-[600] iconBreak:hidden block">
-                    {t('design_media', 'Design Media')}
-                  </div>
-                </div>
-              </div>
-
-              <ThirdPartyMedia allData={allData} onChange={changeMedia} />
-
-              {!!user?.tier?.ai && (
-                <>
-                  <AiImage value={text} onChange={changeMedia} />
-                  <AiVideo value={text} onChange={changeMedia} />
-                </>
-              )}
-            </div>
-          )}
-          {!mediaNotAvailable && (
-            <div className="text-newColColor h-full flex items-center">
-              <VerticalDividerIcon />
+                <InsertMediaIcon />
+                {t('choose_from_library', 'Choose from library')}
+              </button>
             </div>
           )}
           {!!toolBar && (

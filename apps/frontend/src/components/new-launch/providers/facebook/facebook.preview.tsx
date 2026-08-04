@@ -176,7 +176,11 @@ export const FacebookPreview: FC<{
               href={mediaDir.set(image.path)}
               target="_blank"
             >
-              <VideoOrImage autoplay={true} src={mediaDir.set(image.path)} />
+              <VideoOrImage
+                autoplay={false}
+                interactive
+                src={mediaDir.set(image.path)}
+              />
             </a>
           ))}
         </div>
@@ -310,7 +314,8 @@ export const FacebookPreview: FC<{
                             target="_blank"
                           >
                             <VideoOrImage
-                              autoplay={true}
+                              autoplay={false}
+                              interactive
                               src={mediaDir.set(image.path)}
                             />
                           </a>

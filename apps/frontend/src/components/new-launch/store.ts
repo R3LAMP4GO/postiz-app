@@ -169,34 +169,39 @@ export const useLaunchStore = create<StoreState>()((set) => ({
   ) => {
     set((state) => {
       const existing = state.selectedIntegrations.find(
-        (i) => i.integration.id === integration.id
+        (item) => item.integration.id === integration.id
       );
 
       if (existing) {
         const selectedList = state.selectedIntegrations.filter(
-          (s, index) => s.integration.id !== existing.integration.id
+          (item) => item.integration.id !== integration.id
         );
+        const currentWasRemoved = state.current === integration.id;
 
         return {
-          ...(existing.integration.id === state.current
-            ? { current: 'global' }
-            : {}),
           loaded: false,
           selectedIntegrations: selectedList,
-          ...(selectedList.length === 0
-            ? {
-                current: 'global',
-                editor: 'normal',
-              }
-            : {}),
+          current:
+            selectedList.length === 0
+              ? 'global'
+              : currentWasRemoved
+              ? selectedList[0].integration.id
+              : state.current,
+          ...(selectedList.length === 0 ? { editor: 'normal' } : {}),
         };
       }
 
+      const selectedIntegrations = [
+        ...state.selectedIntegrations,
+        { integration, settings, ref: createRef() },
+      ];
+
       return {
-        selectedIntegrations: [
-          ...state.selectedIntegrations,
-          { integration, settings, ref: createRef() },
-        ],
+        selectedIntegrations,
+        current:
+          state.selectedIntegrations.length === 0
+            ? integration.id
+            : state.current,
       };
     });
   },
@@ -369,7 +374,10 @@ export const useLaunchStore = create<StoreState>()((set) => ({
           if (item.integration.id === integrationId) {
             const targetIndex = direction === 'up' ? index - 1 : index + 1;
 
-            if (targetIndex < 0 || targetIndex >= item.integrationValue.length) {
+            if (
+              targetIndex < 0 ||
+              targetIndex >= item.integrationValue.length
+            ) {
               return item;
             }
 

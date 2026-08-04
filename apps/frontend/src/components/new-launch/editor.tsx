@@ -58,6 +58,7 @@ import { AComponent } from '@gitroom/frontend/components/new-launch/a.component'
 import { Placeholder } from '@tiptap/extensions';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { InformationComponent } from '@gitroom/frontend/components/launches/information.component';
+import { requiresMediaBeforeText } from '@gitroom/frontend/components/new-launch/platform-capabilities';
 import {
   LockIcon,
   ConnectionLineIcon,
@@ -184,8 +185,12 @@ export const EditorWrapper: FC<{
   }, [loaded, loadedState]);
 
   const canEdit = useMemo(() => {
-    return current === 'global' || !!internal;
-  }, [current, internal]);
+    return (
+      current === 'global' ||
+      !!internal ||
+      selectedIntegration.some((item) => item.integration.id === current)
+    );
+  }, [current, internal, selectedIntegration]);
 
   const items = useMemo(() => {
     if (internal) {
@@ -385,35 +390,33 @@ export const EditorWrapper: FC<{
           <div className="absolute w-full h-full left-0 top-0 bg-newBackdrop opacity-60 z-[100] rounded-[12px]" />
         </>
       )}
-      {!canEdit && !isCreateSet && (
-        <>
-          <div
+      {current !== 'global' && !internal && !isCreateSet && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[12px] rounded-[8px] border border-newBorder bg-newBgColorInner p-[12px]">
+          <div className="min-w-0 flex-1">
+            <div className="text-[13px] font-[600] text-textColor">
+              {t('using_shared_content', 'Using shared content')}
+            </div>
+            <div className="text-[12px] text-[#A3A3A3]">
+              {t(
+                'shared_content_updates_all_destinations',
+                'Changes here update every destination that uses shared content.'
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
             onClick={() => {
               setLoaded(false);
               addRemoveInternal(current);
             }}
-            className="text-center absolute w-full h-full p-[20px] left-0 top-0 items-center justify-center flex z-[101] flex-col gap-[16px]"
+            className="min-h-[44px] w-full sm:w-auto shrink-0 rounded-[8px] bg-[#7F1D1D] px-[14px] text-[13px] font-[600] text-white outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444] focus-visible:ring-offset-2 focus-visible:ring-offset-newBgColor"
           >
-            <div>
-              <div className="w-[54px] h-[54px] rounded-full absolute z-[101] flex justify-center items-center">
-                <LockIcon />
-              </div>
-              <div className="w-[54px] h-[54px] rounded-full bg-newSettings opacity-80" />
-            </div>
-            <div className="text-[14px] font-[600] text-white">
-              {t(
-                'click_to_exit_global_editing',
-                'Click this button to exit global editing and customize the post for this channel'
-              )}
-            </div>
-            <div>
-              <div className="text-white rounded-[8px] h-[44px] px-[20px] bg-[#D82D7E] cursor-pointer flex justify-center items-center">
-                {t('edit_content', 'Edit content')}
-              </div>
-            </div>
-          </div>
-          <div className="absolute w-full h-full left-0 top-0 bg-newBackdrop opacity-60 z-[100] rounded-[12px]" />
-        </>
+            {t(
+              'customize_for_platform',
+              `Customize for ${internalFromAll?.identifier || 'platform'}`
+            )}
+          </button>
+        </div>
       )}
       {items.map((g, index) => (
         <div
@@ -422,8 +425,7 @@ export const EditorWrapper: FC<{
             'relative flex flex-col gap-[20px] flex-1 bg-newSettings',
             index === 0 && 'rounded-t-[12px]',
             (index === items.length - 1 || !comments) && 'rounded-b-[12px]',
-            !canEdit && !isCreateSet && 'blur-s',
-            ((!canEdit && index > 0) || (!comments && index > 0)) && 'hidden'
+            !comments && index > 0 && 'hidden'
           )}
         >
           <div className="flex gap-[5px] flex-1 w-full">
@@ -466,28 +468,23 @@ export const EditorWrapper: FC<{
                           )}
                         </div>
                         {!!internal && !existingData?.integration && (
-                          <div
-                            className="mt-[12px] flex gap-[20px] items-center cursor-pointer select-none"
+                          <button
+                            type="button"
+                            className="mt-[12px] min-h-[44px] flex gap-[8px] items-center rounded-[8px] px-[10px] text-[13px] font-[600] outline-none hover:bg-newColColor focus-visible:ring-2 focus-visible:ring-[#EF4444]"
                             onClick={goBackToGlobal}
                           >
-                            <div className="flex gap-[6px] items-center">
-                              <div className="w-[8px] h-[8px] rounded-full bg-[#FC69FF]" />
-                              <div className="text-[14px] font-[600]">
-                                {t(
-                                  'editing_a_specific_network',
-                                  'Editing a Specific Network'
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex gap-[6px] items-center">
-                              <div>
-                                <ResetIcon />
-                              </div>
-                              <div className="text-[13px] font-[600]">
-                                {t('back_to_global', 'Back to global')}
-                              </div>
-                            </div>
-                          </div>
+                            <span className="size-[8px] rounded-full bg-[#EF4444]" />
+                            <span>
+                              {t(
+                                'editing_a_specific_network',
+                                'Customized content'
+                              )}
+                            </span>
+                            <ResetIcon />
+                            <span>
+                              {t('back_to_global', 'Reset to shared')}
+                            </span>
+                          </button>
                         )}
                       </div>
                     ) : null}
@@ -662,6 +659,8 @@ export const Editor: FC<{
   const valueWithoutHtml = useMemo(() => {
     return stripHtmlValidation('normal', props.value || '', true);
   }, [props.value]);
+  const captionUnlocked = true;
+
 
   const addText = useCallback(
     (emoji: string) => {
@@ -714,11 +713,27 @@ export const Editor: FC<{
               {t('drop_files_here_to_upload', 'Drop your files here to upload')}
             </div>
             <div className="px-[10px] pt-[10px] bg-newBgColorInner rounded-t-[6px] relative z-[99]">
+              {!captionUnlocked && (
+                <div
+                  id={`media-required-${id}`}
+                  className="mb-[10px] rounded-[8px] border border-dashed border-newBorder p-[12px] text-[13px] text-[#A3A3A3]"
+                  role="status"
+                >
+                  {t(
+                    'add_media_before_caption',
+                    'Add a photo or video to unlock the caption.'
+                  )}
+                </div>
+              )}
               <OnlyEditor
                 value={props.value}
                 editorType={editorType}
                 onChange={props.onChange}
                 paste={paste}
+                disabled={!captionUnlocked}
+                describedBy={
+                  !captionUnlocked ? `media-required-${id}` : undefined
+                }
                 ref={editorRef}
               />
             </div>
@@ -863,185 +878,209 @@ export const OnlyEditor = forwardRef<
     value: string;
     onChange: (value: string) => void;
     paste?: (event: ClipboardEvent | File[]) => void;
+    disabled?: boolean;
+    describedBy?: string;
   }
->(({ editorType, value, onChange, paste }, ref) => {
-  const t = useT();
-  const fetch = useFetch();
+>(
+  (
+    { editorType, value, onChange, paste, disabled = false, describedBy },
+    ref
+  ) => {
+    const t = useT();
+    const fetch = useFetch();
 
-  const { internal } = useLaunchStore(
-    useShallow((state) => ({
-      internal: state.internal.find((p) => p.integration.id === state.current),
-    }))
-  );
+    const { internal } = useLaunchStore(
+      useShallow((state) => ({
+        internal: state.internal.find(
+          (p) => p.integration.id === state.current
+        ),
+      }))
+    );
 
-  const loadList = useCallback(
-    async (query: string) => {
-      if (query.length < 2) {
-        return [];
-      }
+    const loadList = useCallback(
+      async (query: string) => {
+        if (query.length < 2) {
+          return [];
+        }
 
-      if (!internal?.integration.id) {
-        return [];
-      }
+        if (!internal?.integration.id) {
+          return [];
+        }
 
-      try {
-        const load = await fetch('/integrations/mentions', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: 'mention',
-            id: internal.integration.id,
-            data: { query },
-          }),
-        });
+        try {
+          const load = await fetch('/integrations/mentions', {
+            method: 'POST',
+            body: JSON.stringify({
+              name: 'mention',
+              id: internal.integration.id,
+              data: { query },
+            }),
+          });
 
-        const result = await load.json();
-        return result;
-      } catch (error) {
-        console.error('Error loading mentions:', error);
-        return [];
-      }
-    },
-    [internal, fetch]
-  );
+          const result = await load.json();
+          return result;
+        } catch (error) {
+          console.error('Error loading mentions:', error);
+          return [];
+        }
+      },
+      [internal, fetch]
+    );
 
-  const editor = useEditor({
-    extensions: [
-      Document,
-      Paragraph,
-      Text,
-      Underline,
-      Bold,
-      InterceptBoldShortcut,
-      InterceptUnderlineShortcut,
-      BulletList,
-      ListItem,
-      Placeholder.configure({
-        placeholder: t('write_something', 'Write something …'),
-        emptyEditorClass: 'is-editor-empty',
-      }),
-      ...(editorType === 'html' || editorType === 'markdown'
-        ? [
-            Link.configure({
-              openOnClick: false,
-              autolink: true,
-              defaultProtocol: 'https',
-              protocols: ['http', 'https'],
-              isAllowedUri: (url, ctx) => {
-                try {
-                  // prevent transforming plain emails like foo@bar.com into links
-                  const trimmed = String(url).trim();
-                  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                  if (emailPattern.test(trimmed)) {
+    const editor = useEditor({
+      extensions: [
+        Document,
+        Paragraph,
+        Text,
+        Underline,
+        Bold,
+        InterceptBoldShortcut,
+        InterceptUnderlineShortcut,
+        BulletList,
+        ListItem,
+        Placeholder.configure({
+          placeholder: t('write_something', 'Write something …'),
+          emptyEditorClass: 'is-editor-empty',
+        }),
+        ...(editorType === 'html' || editorType === 'markdown'
+          ? [
+              Link.configure({
+                openOnClick: false,
+                autolink: true,
+                defaultProtocol: 'https',
+                protocols: ['http', 'https'],
+                isAllowedUri: (url, ctx) => {
+                  try {
+                    // prevent transforming plain emails like foo@bar.com into links
+                    const trimmed = String(url).trim();
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (emailPattern.test(trimmed)) {
+                      return false;
+                    }
+
+                    // construct URL
+                    const parsedUrl = url.includes(':')
+                      ? new URL(url)
+                      : new URL(`${ctx.defaultProtocol}://${url}`);
+
+                    // use default validation
+                    if (!ctx.defaultValidate(parsedUrl.href)) {
+                      return false;
+                    }
+
+                    // disallowed protocols
+                    const disallowedProtocols = ['ftp', 'file', 'mailto'];
+                    const protocol = parsedUrl.protocol.replace(':', '');
+
+                    if (disallowedProtocols.includes(protocol)) {
+                      return false;
+                    }
+
+                    // only allow protocols specified in ctx.protocols
+                    const allowedProtocols = ctx.protocols.map((p) =>
+                      typeof p === 'string' ? p : p.scheme
+                    );
+
+                    if (!allowedProtocols.includes(protocol)) {
+                      return false;
+                    }
+
+                    // all checks have passed
+                    return true;
+                  } catch {
                     return false;
                   }
+                },
+                shouldAutoLink: (url) => {
+                  try {
+                    // prevent auto-linking of plain emails like foo@bar.com
+                    const trimmed = String(url).trim();
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (emailPattern.test(trimmed)) {
+                      return false;
+                    }
 
-                  // construct URL
-                  const parsedUrl = url.includes(':')
-                    ? new URL(url)
-                    : new URL(`${ctx.defaultProtocol}://${url}`);
+                    // construct URL
+                    const parsedUrl = url.includes(':')
+                      ? new URL(url)
+                      : new URL(`https://${url}`);
 
-                  // use default validation
-                  if (!ctx.defaultValidate(parsedUrl.href)) {
+                    // only auto-link if the domain is not in the disallowed list
+                    const disallowedDomains = [
+                      'example-no-autolink.com',
+                      'another-no-autolink.com',
+                    ];
+                    const domain = parsedUrl.hostname;
+
+                    return !disallowedDomains.includes(domain);
+                  } catch {
                     return false;
                   }
-
-                  // disallowed protocols
-                  const disallowedProtocols = ['ftp', 'file', 'mailto'];
-                  const protocol = parsedUrl.protocol.replace(':', '');
-
-                  if (disallowedProtocols.includes(protocol)) {
-                    return false;
-                  }
-
-                  // only allow protocols specified in ctx.protocols
-                  const allowedProtocols = ctx.protocols.map((p) =>
-                    typeof p === 'string' ? p : p.scheme
-                  );
-
-                  if (!allowedProtocols.includes(protocol)) {
-                    return false;
-                  }
-
-                  // all checks have passed
-                  return true;
-                } catch {
-                  return false;
-                }
-              },
-              shouldAutoLink: (url) => {
-                try {
-                  // prevent auto-linking of plain emails like foo@bar.com
-                  const trimmed = String(url).trim();
-                  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                  if (emailPattern.test(trimmed)) {
-                    return false;
-                  }
-
-                  // construct URL
-                  const parsedUrl = url.includes(':')
-                    ? new URL(url)
-                    : new URL(`https://${url}`);
-
-                  // only auto-link if the domain is not in the disallowed list
-                  const disallowedDomains = [
-                    'example-no-autolink.com',
-                    'another-no-autolink.com',
+                },
+              }),
+            ]
+          : []),
+        ...(internal?.integration?.id
+          ? [
+              Mention.configure({
+                HTMLAttributes: {
+                  class: 'mention',
+                },
+                renderHTML({ options, node }) {
+                  return [
+                    'span',
+                    mergeAttributes(options.HTMLAttributes, {
+                      'data-mention-id': node.attrs.id || '',
+                      'data-mention-label': node.attrs.label || '',
+                    }),
+                    `@${node.attrs.label}`,
                   ];
-                  const domain = parsedUrl.hostname;
+                },
+                suggestion: suggestion(loadList),
+              }),
+            ]
+          : []),
+        ...(editorType === 'html' || editorType === 'markdown'
+          ? [
+              Heading.configure({
+                levels: [1, 2, 3],
+              }),
+            ]
+          : []),
+        History.configure({
+          depth: 100, // default is 100
+          newGroupDelay: 100, // default is 500ms
+        }),
+      ],
+      content: value || '',
+      editable: !disabled,
+      editorProps: {
+        attributes: {
+          'aria-disabled': String(disabled),
+          ...(describedBy ? { 'aria-describedby': describedBy } : {}),
+        },
+      },
+      shouldRerenderOnTransaction: true,
+      immediatelyRender: false,
+      // @ts-ignore
+      onPaste: paste,
+      onUpdate: (innerProps) => {
+        onChange?.(innerProps.editor.getHTML());
+      },
+    });
 
-                  return !disallowedDomains.includes(domain);
-                } catch {
-                  return false;
-                }
-              },
-            }),
-          ]
-        : []),
-      ...(internal?.integration?.id
-        ? [
-            Mention.configure({
-              HTMLAttributes: {
-                class: 'mention',
-              },
-              renderHTML({ options, node }) {
-                return [
-                  'span',
-                  mergeAttributes(options.HTMLAttributes, {
-                    'data-mention-id': node.attrs.id || '',
-                    'data-mention-label': node.attrs.label || '',
-                  }),
-                  `@${node.attrs.label}`,
-                ];
-              },
-              suggestion: suggestion(loadList),
-            }),
-          ]
-        : []),
-      ...(editorType === 'html' || editorType === 'markdown'
-        ? [
-            Heading.configure({
-              levels: [1, 2, 3],
-            }),
-          ]
-        : []),
-      History.configure({
-        depth: 100, // default is 100
-        newGroupDelay: 100, // default is 500ms
-      }),
-    ],
-    content: value || '',
-    shouldRerenderOnTransaction: true,
-    immediatelyRender: false,
-    // @ts-ignore
-    onPaste: paste,
-    onUpdate: (innerProps) => {
-      onChange?.(innerProps.editor.getHTML());
-    },
-  });
+    useEffect(() => {
+      editor?.setEditable(!disabled);
+    }, [editor, disabled]);
 
-  useImperativeHandle(ref, () => ({
-    editor,
-  }));
+    useImperativeHandle(ref, () => ({
+      editor,
+    }));
 
-  return <EditorContent editor={editor} />;
-});
+    return (
+      <div className={clsx(disabled && 'cursor-not-allowed opacity-60')}>
+        <EditorContent editor={editor} />
+      </div>
+    );
+  }
+);

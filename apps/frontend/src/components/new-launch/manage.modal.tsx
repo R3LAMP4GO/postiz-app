@@ -34,7 +34,6 @@ import { DummyCodeComponent } from '@gitroom/frontend/components/new-launch/dumm
 import { CreationMethodBadge } from '@gitroom/frontend/components/launches/creation.method.badge';
 import {
   SettingsIcon,
-  ChevronDownIcon,
   CloseIcon,
   TrashIcon,
   DropdownArrowSmallIcon,
@@ -52,7 +51,6 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
   const [loading, setLoading] = useState(false);
   const toaster = useToaster();
   const modal = useModals();
-  const [showSettings, setShowSettings] = useState(false);
   const { data: shortlinkPreferenceData } = useShortlinkPreference();
 
   const { addEditSets, mutate, customClose, dummy } = props;
@@ -312,7 +310,6 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
               );
               focus(item.id, 'fix');
               setLoading(false);
-              setShowSettings(true);
               return;
             }
 
@@ -325,7 +322,6 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
               );
               focus(item.id, 'preview');
               setLoading(false);
-              setShowSettings(false);
               return;
             }
 
@@ -439,10 +435,10 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
   );
 
   return (
-    <div className="w-full h-full flex-1 p-[40px] flex relative">
-      <div className="flex flex-1 bg-newBgColorInner rounded-[20px] flex-col">
-        <div className="flex-1 flex">
-          <div className="flex flex-col flex-1 border-e border-newBorder">
+    <div className="w-full h-full flex-1 p-[12px] md:p-[24px] xl:p-[40px] flex relative overflow-y-auto xl:overflow-hidden">
+      <div className="flex min-w-0 flex-1 bg-newBgColorInner rounded-[20px] flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden xl:flex-row">
+          <div className="flex min-h-0 min-w-0 flex-col flex-1 border-b xl:border-b-0 xl:border-e border-newBorder">
             <div className="bg-newBgColor h-[65px] rounded-s-[20px] !rounded-b-[0] flex items-center gap-[12px] px-[20px] text-[20px] font-[600]">
               {t('create_post_title', 'Create Post')}
               <CreationMethodBadge
@@ -450,96 +446,135 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                 size="sm"
               />
             </div>
-            <div className="flex-1 flex flex-col gap-[16px]">
-              <div
-                className={clsx('flex-1 relative', showSettings && 'hidden')}
-              >
+            <div className="flex-1 xl:min-h-0 xl:overflow-y-auto scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner flex flex-col gap-[16px]">
+              <div className="relative">
                 <div
                   id="social-content"
-                  className="gap-[32px] flex flex-col pe-[8px] pt-[20px] ps-[20px] absolute top-0 left-0 w-full h-full overflow-x-hidden overflow-y-scroll scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner"
+                  className="gap-[28px] flex flex-col p-[16px] md:p-[20px]"
                 >
-                  <div className="flex w-full">
-                    <div className="flex flex-1">
-                      <PicksSocialsComponent toolTip={true} />
+                  <section
+                    className="flex flex-col gap-[12px]"
+                    aria-labelledby="destinations-heading"
+                  >
+                    <div className="flex w-full flex-wrap items-end gap-[12px]">
+                      <div className="flex min-w-0 flex-1 flex-col gap-[4px]">
+                        <h2
+                          id="destinations-heading"
+                          className="text-[16px] font-[600]"
+                        >
+                          {t('destinations', 'Destinations')}
+                        </h2>
+                        <p className="text-[13px] text-[#A3A3A3]">
+                          {t(
+                            'choose_destinations_first',
+                            'Choose at least one account to start composing.'
+                          )}
+                        </p>
+                        <PicksSocialsComponent toolTip={true} />
+                      </div>
+                      <div>
+                        {!dummy && (
+                          <SelectCustomer
+                            onChange={changeCustomer}
+                            integrations={integrations}
+                          />
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      {!dummy && (
-                        <SelectCustomer
-                          onChange={changeCustomer}
-                          integrations={integrations}
-                        />
-                      )}
+                  </section>
+                  {selectedIntegrations.length === 0 ? (
+                    <div className="min-h-[180px] rounded-[12px] border border-dashed border-newBorder bg-newSettings p-[24px] flex flex-col items-center justify-center text-center">
+                      <div className="text-[15px] font-[600]">
+                        {t(
+                          'select_destination_to_continue',
+                          'Select a destination to continue'
+                        )}
+                      </div>
+                      <div className="mt-[4px] max-w-[420px] text-[13px] text-[#A3A3A3]">
+                        {t(
+                          'destination_unlocks_content',
+                          'Your selected account determines the post limits, settings, and preview.'
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-1 gap-[6px] flex-col">
-                    <div>{!existingData.integration && <SelectCurrent />}</div>
-                    <div className="flex-1 flex">
-                      {!hide && <EditorWrapper totalPosts={1} value="" />}
-                    </div>
-                    <div
-                      id="social-empty"
-                      className={clsx(
-                        'pb-[16px]'
-                        // current !== 'global' && 'hidden'
-                      )}
-                    />
-                  </div>
+                  ) : (
+                    <section
+                      className="flex flex-1 gap-[10px] flex-col"
+                      aria-labelledby="content-heading"
+                    >
+                      <h2
+                        id="content-heading"
+                        className="text-[16px] font-[600]"
+                      >
+                        {t('content', 'Content')}
+                      </h2>
+                      <div className="flex flex-col gap-[10px]">
+                        <div>
+                          {!existingData.integration && <SelectCurrent />}
+                        </div>
+                        <div className="flex-1 flex">
+                          <EditorWrapper totalPosts={1} value="" />
+                        </div>
+                        <div id="social-empty" className="pb-[16px]" />
+                      </div>
+                    </section>
+                  )}
                 </div>
               </div>
-              <div
+              <section
                 id="wrapper-settings"
+                aria-labelledby="customize-heading"
                 className={clsx(
-                  'pb-[20px] px-[20px] select-none',
-                  showSettings && 'flex-1 flex pt-[20px]',
+                  'pb-[20px] px-[16px] md:px-[20px] select-none',
                   current === 'global' && 'hidden'
                 )}
               >
+                <h2
+                  id="customize-heading"
+                  className="mb-[10px] text-[16px] font-[600]"
+                >
+                  {t('customize', 'Customize')}
+                </h2>
                 <div className="flex-1 flex flex-col rounded-[12px] gap-[12px] overflow-hidden bg-newSettings">
-                  <div
-                    onClick={() => setShowSettings(!showSettings)}
-                    className={clsx(
-                      'bg-[#612BD3] rounded-[12px] flex items-center gap-[8px] cursor-pointer p-[12px]',
-                      showSettings ? '!rounded-b-none' : ''
-                    )}
-                  >
+                  <div className="bg-[#7F1D1D] rounded-t-[12px] flex items-center gap-[8px] p-[12px]">
                     <div className="flex-1 text-[14px] font-[600] text-white">
                       {currentIntegrationText}
                     </div>
-                    <div>
-                      <ChevronDownIcon
-                        rotated={showSettings}
-                        className="text-white"
-                      />
-                    </div>
                   </div>
-                  <div
-                    className={clsx(
-                      !showSettings ? 'hidden' : 'flex-1',
-                      'text-[14px] text-textColor font-[500] relative'
-                    )}
-                  >
-                    <div className="absolute left-0 top-0 w-full h-full flex flex-col overflow-x-hidden overflow-y-auto scrollbar scrollbar-thumb-newBgColorInner scrollbar-track-newColColor">
-                      <div
-                        id="social-settings"
-                        className="flex flex-col gap-[20px] bg-newBgColor"
-                      />
-                    </div>
+                  <div className="text-[14px] text-textColor font-[500]">
+                    <div
+                      id="social-settings"
+                      className="flex flex-col gap-[20px] bg-newBgColor"
+                    />
                   </div>
                   <style>
                     {`#social-settings [data-id="${current}"] {display: block !important;}`}
                   </style>
                 </div>
-              </div>
+              </section>
             </div>
           </div>
-          <div className="w-[580px] flex flex-col">
-            <div className="bg-newBgColor h-[65px] rounded-e-[20px] !rounded-b-[0] flex items-center px-[20px] text-[20px] font-[600]">
-              <div className="flex-1">{t('post_preview', 'Post Preview')}</div>
-              <div className="cursor-pointer">
-                <CloseIcon onClick={askClose} className="text-[#A3A3A3]" />
+          <div className="w-full min-w-0 xl:w-[580px] min-h-[520px] xl:min-h-0 flex flex-col">
+            <div className="bg-newBgColor min-h-[65px] rounded-e-[20px] !rounded-b-[0] flex items-start gap-[12px] px-[20px] py-[12px] text-[20px] font-[600]">
+              <div className="min-w-0 flex-1 flex flex-col gap-[8px]">
+                <div>{t('post_preview', 'Post Preview')}</div>
+                {selectedIntegrations.length > 0 && (
+                  <SelectCurrent
+                    compact
+                    ariaLabel={t('preview_destination', 'Preview destination')}
+                  />
+                )}
               </div>
+              <button
+                type="button"
+                aria-label={t('close', 'Close')}
+                onClick={askClose}
+                className="min-h-[44px] min-w-[44px] rounded-[8px] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444]"
+              >
+                <CloseIcon className="text-[#A3A3A3]" />
+              </button>
             </div>
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-h-[440px]">
               <Scrollable
                 scrollClasses="!pe-[20px]"
                 className="absolute top-0 p-[20px] pe-[8px] left-0 w-full h-full overflow-x-hidden overflow-y-scroll scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner"
@@ -549,7 +584,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
             </div>
           </div>
         </div>
-        <div className="select-none h-[84px] py-[20px] border-t border-newBorder flex items-center">
+        <div className="select-none shrink-0 z-[200] min-h-[84px] py-[16px] border-t border-newBorder bg-newBgColorInner flex flex-wrap items-center gap-[12px]">
           <div className="flex-1 flex ps-[20px] gap-[8px]">
             {!dummy && (
               <TagsComponent
@@ -566,7 +601,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
               <RepeatComponent repeat={repeater} onChange={setRepeater} />
             )}
           </div>
-          <div className="pe-[20px] flex items-center justify-end gap-[8px]">
+          <div className="px-[20px] flex flex-wrap items-center justify-end gap-[8px]">
             {existingData?.integration && (
               <button
                 onClick={deletePost}
@@ -599,7 +634,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
             )}
             {addEditSets && (
               <button
-                className="text-white text-[15px] font-[600] min-w-[180px] btnSub disabled:cursor-not-allowed disabled:opacity-80 outline-none gap-[8px] flex justify-center items-center h-[44px] rounded-[8px] bg-[#612BD3] ps-[20px] pe-[16px]"
+                className="text-white text-[15px] font-[600] min-w-[180px] btnSub disabled:cursor-not-allowed disabled:opacity-80 outline-none gap-[8px] flex justify-center items-center h-[44px] rounded-[8px] bg-[#7F1D1D] ps-[20px] pe-[16px]"
                 disabled={
                   selectedIntegrations.length === 0 || loading || locked
                 }
@@ -615,7 +650,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                     selectedIntegrations.length === 0 || loading || locked
                   }
                   onClick={schedule('schedule')}
-                  className="text-white relative min-w-[180px] btnSub disabled:cursor-not-allowed disabled:opacity-80 outline-none gap-[8px] flex justify-center items-center h-[44px] rounded-[8px] bg-[#612BD3] ps-[20px] pe-[16px]"
+                  className="text-white relative min-w-[180px] btnSub disabled:cursor-not-allowed disabled:opacity-80 outline-none gap-[8px] flex justify-center items-center h-[44px] rounded-[8px] bg-[#7F1D1D] ps-[20px] pe-[16px]"
                 >
                   {loading && (
                     <div className="absolute left-[50%] top-[50%] -translate-y-[50%] -translate-x-[50%]">

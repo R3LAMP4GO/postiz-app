@@ -1,0 +1,58 @@
+name: Build Douro image
+
+on:
+  push:
+    branches:
+      - douro
+  workflow_dispatch:
+
+concurrency:
+  group: douro-image-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build and publish linux/amd64 image
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and publish
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.douro
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            NEXT_PUBLIC_VERSION=${{ github.sha }}
+          tags: |
+            ghcr.io/r3lamp4go/postiz-app:${{ github.sha }}
+            ghcr.io/r3lamp4go/postiz-app:douro-staging
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Record immutable image reference
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          test -n "$IMAGE_DIGEST"
+          printf '### Published image\n\n`ghcr.io/r3lamp4go/postiz-app@%s`\n' "$IMAGE_DIGEST" >> "$GITHUB_STEP_SUMMARY"

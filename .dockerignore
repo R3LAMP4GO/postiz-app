@@ -21,3 +21,11 @@ dist
 .git
 .github
 reports
+
+# Never send local configuration or secrets to the Docker daemon.
+.env
+.env.*
+*.pem
+*.key
+*.log
+.gg

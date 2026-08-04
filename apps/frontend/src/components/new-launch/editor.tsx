@@ -661,7 +661,6 @@ export const Editor: FC<{
   }, [props.value]);
   const captionUnlocked = true;
 
-
   const addText = useCallback(
     (emoji: string) => {
       editorRef?.current?.editor?.commands?.insertContent(emoji);

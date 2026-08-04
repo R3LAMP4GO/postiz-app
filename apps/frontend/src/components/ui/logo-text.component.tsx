@@ -7,6 +7,7 @@ export const LogoTextComponent = () => {
       alt="Douro Digital"
       width={101}
       height={52}
+      draggable={false}
       className="object-contain"
     />
   );

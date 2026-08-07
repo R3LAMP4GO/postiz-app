@@ -93,7 +93,8 @@ export class PublicIntegrationsController {
     return this._mediaService.saveFile(
       org.id,
       getFile.originalname,
-      getFile.path
+      getFile.path,
+      getFile.size
     );
   }
 
@@ -157,7 +158,8 @@ export class PublicIntegrationsController {
     return this._mediaService.saveFile(
       org.id,
       getFile.originalname,
-      getFile.path
+      getFile.path,
+      getFile.size
     );
   }
 

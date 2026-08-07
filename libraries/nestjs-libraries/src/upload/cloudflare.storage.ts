@@ -112,7 +112,10 @@ class CloudflareStorage implements IUploadProvider {
     const command = new PutObjectCommand({ ...params });
     await this._client.send(command);
 
-    return `${this._uploadUrl}/${id}.${extension}`;
+    return {
+      path: `${this._uploadUrl}/${id}.${extension}`,
+      size: body.length,
+    };
   }
 
   async uploadFile(file: Express.Multer.File): Promise<any> {

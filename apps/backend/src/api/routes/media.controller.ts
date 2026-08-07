@@ -81,7 +81,12 @@ export class MediaController {
 
     const file = await this.storage.uploadSimple(image.output);
 
-    return this._mediaService.saveFile(org.id, file.split('/').pop(), file);
+    return this._mediaService.saveFile(
+      org.id,
+      file.path.split('/').pop(),
+      file.path,
+      file.size
+    );
   }
 
   @Post('/upload-server')
@@ -97,6 +102,7 @@ export class MediaController {
       org.id,
       uploadedFile.originalname,
       uploadedFile.path,
+      uploadedFile.size,
       originalName
     );
   }
@@ -106,7 +112,8 @@ export class MediaController {
     @GetOrgFromRequest() org: Organization,
     @Req() req: Request,
     @Body('name') name: string,
-    @Body('originalName') originalName: string
+    @Body('originalName') originalName: string,
+    @Body('fileSize') fileSize: number
   ) {
     if (!name) {
       return false;
@@ -115,6 +122,7 @@ export class MediaController {
       org.id,
       name,
       process.env.CLOUDFLARE_BUCKET_URL + '/' + name,
+      fileSize,
       originalName || undefined
     );
   }
@@ -147,6 +155,7 @@ export class MediaController {
       org.id,
       getFile.originalname,
       getFile.path,
+      getFile.size,
       originalName
     );
   }
@@ -159,19 +168,18 @@ export class MediaController {
     @Param('endpoint') endpoint: string
   ) {
     const upload = await handleR2Upload(endpoint, req, res);
-    if (endpoint !== 'complete-multipart-upload') {
+    if (endpoint !== 'complete-multipart-upload' || !('fileSize' in upload)) {
       return upload;
     }
 
-    // @ts-ignore
     const name = upload.Location.split('/').pop();
     const originalName = req.body?.file?.name;
 
     const saveFile = await this._mediaService.saveFile(
       org.id,
       name,
-      // @ts-ignore
       upload.Location,
+      upload.fileSize,
       originalName || undefined
     );
 
@@ -193,10 +201,12 @@ export class MediaController {
   }
 
   @Post('/video/function')
-  videoFunction(
-    @Body() body: VideoFunctionDto
-  ) {
-    return this._mediaService.videoFunction(body.identifier, body.functionName, body.params);
+  videoFunction(@Body() body: VideoFunctionDto) {
+    return this._mediaService.videoFunction(
+      body.identifier,
+      body.functionName,
+      body.params
+    );
   }
 
   @Get('/generate-video/:type/allowed')

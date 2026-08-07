@@ -7,6 +7,7 @@ import {
   AbortMultipartUploadCommand,
   PutObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -57,11 +58,16 @@ function generateRandomString() {
   return makeId(20);
 }
 
+export type CompletedR2Upload = {
+  Location: string;
+  fileSize: number;
+};
+
 export default async function handleR2Upload(
   endpoint: string,
   req: Request,
   res: Response
-) {
+): Promise<Response | CompletedR2Upload> {
   switch (endpoint) {
     case 'create-multipart-upload':
       return createMultipartUpload(req, res);
@@ -85,7 +91,10 @@ export async function simpleUpload(
   _contentType: string
 ) {
   const detected = await fromBuffer(data);
-  if (!detected || !Object.values(ALLOWED_EXT_TO_MIME).includes(detected.mime)) {
+  if (
+    !detected ||
+    !Object.values(ALLOWED_EXT_TO_MIME).includes(detected.mime)
+  ) {
     throw new Error('Unsupported file type.');
   }
   const fileExtension = `.${detected.ext}`;
@@ -186,7 +195,10 @@ export async function listParts(req: Request, res: Response) {
   }
 }
 
-export async function completeMultipartUpload(req: Request, res: Response) {
+export async function completeMultipartUpload(
+  req: Request,
+  res: Response
+): Promise<Response | CompletedR2Upload> {
   const { key, uploadId, parts } = req.body;
 
   try {
@@ -231,11 +243,21 @@ export async function completeMultipartUpload(req: Request, res: Response) {
         .json({ message: 'File contents do not match declared type.' });
     }
 
-    response.Location =
-      process.env.CLOUDFLARE_BUCKET_URL +
-      '/' +
-      response?.Location?.split('/').at(-1);
-    return response;
+    const metadata = await R2.send(
+      new HeadObjectCommand({
+        Bucket: CLOUDFLARE_BUCKETNAME,
+        Key: key,
+      })
+    );
+
+    return {
+      ...response,
+      Location:
+        process.env.CLOUDFLARE_BUCKET_URL +
+        '/' +
+        response?.Location?.split('/').at(-1),
+      fileSize: metadata.ContentLength || 0,
+    };
   } catch (err) {
     console.log('Error', err);
     return res.status(500).json(err);

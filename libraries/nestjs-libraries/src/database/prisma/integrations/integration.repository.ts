@@ -148,7 +148,7 @@ export class IntegrationRepository {
       (params.picture.indexOf(process.env.CLOUDFLARE_BUCKET_URL!) === -1 ||
         params.picture.indexOf(process.env.FRONTEND_URL!) === -1)
     ) {
-      params.picture = await this.storage.uploadSimple(params.picture);
+      params.picture = (await this.storage.uploadSimple(params.picture)).path;
     }
 
     const existing = await this._integration.model.integration.findUnique({

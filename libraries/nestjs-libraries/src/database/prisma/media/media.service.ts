@@ -57,8 +57,20 @@ export class MediaService {
     }
   }
 
-  saveFile(org: string, fileName: string, filePath: string, originalName?: string) {
-    return this._mediaRepository.saveFile(org, fileName, filePath, originalName);
+  saveFile(
+    org: string,
+    fileName: string,
+    filePath: string,
+    fileSize: number,
+    originalName?: string
+  ) {
+    return this._mediaRepository.saveFile(
+      org,
+      fileName,
+      filePath,
+      fileSize,
+      originalName
+    );
   }
 
   getMedia(org: string, page: number, search?: string) {
@@ -126,7 +138,12 @@ export class MediaService {
           );
 
           const file = await this.storage.uploadSimple(loadedData);
-          return this.saveFile(org.id, file.split('/').pop(), file);
+          return this.saveFile(
+            org.id,
+            file.path.split('/').pop(),
+            file.path,
+            file.size
+          );
         }
       );
     } catch (err) {

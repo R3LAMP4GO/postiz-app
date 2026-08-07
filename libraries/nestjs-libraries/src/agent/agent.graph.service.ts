@@ -343,11 +343,12 @@ export class AgentGraphService {
       (state.content || []).map(async (p) => {
         if (p.image) {
           const upload = await this.storage.uploadSimple(p.image);
-          const name = upload.split('/').pop()!;
+          const name = upload.path.split('/').pop()!;
           const uploadWithId = await this._mediaService.saveFile(
             state.orgId,
             name,
-            upload
+            upload.path,
+            upload.size
           );
 
           return {

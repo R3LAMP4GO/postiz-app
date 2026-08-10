@@ -436,9 +436,9 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
 
   return (
     <div className="w-full h-full flex-1 p-[12px] md:p-[24px] xl:p-[40px] flex relative overflow-y-auto xl:overflow-hidden">
-      <div className="flex min-w-0 flex-1 bg-newBgColorInner rounded-[20px] flex-col">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden xl:flex-row">
-          <div className="flex min-h-0 min-w-0 flex-col flex-1 border-b xl:border-b-0 xl:border-e border-newBorder">
+      <div className="flex w-full min-w-0 flex-none xl:flex-1 bg-newBgColorInner rounded-[20px] flex-col">
+        <div className="flex w-full min-w-0 flex-none flex-col overflow-visible xl:min-h-0 xl:flex-1 xl:overflow-hidden xl:flex-row">
+          <div className="flex w-full min-w-0 flex-none flex-col xl:min-h-0 xl:flex-1 border-b xl:border-b-0 xl:border-e border-newBorder">
             <div className="bg-newBgColor h-[65px] rounded-s-[20px] !rounded-b-[0] flex items-center gap-[12px] px-[20px] text-[20px] font-[600]">
               {t('create_post_title', 'Create Post')}
               <CreationMethodBadge
@@ -446,7 +446,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                 size="sm"
               />
             </div>
-            <div className="flex-1 xl:min-h-0 xl:overflow-y-auto scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner flex flex-col gap-[16px]">
+            <div className="flex-none xl:min-h-0 xl:flex-1 xl:overflow-y-auto scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner flex flex-col gap-[16px]">
               <div className="relative">
                 <div
                   id="social-content"
@@ -554,7 +554,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
               </section>
             </div>
           </div>
-          <div className="w-full min-w-0 xl:w-[580px] min-h-[520px] xl:min-h-0 flex flex-col">
+          <div className="w-full max-w-full min-w-0 flex-none min-h-[520px] xl:min-h-0 xl:w-[580px] flex flex-col">
             <div className="bg-newBgColor min-h-[65px] rounded-e-[20px] !rounded-b-[0] flex items-start gap-[12px] px-[20px] py-[12px] text-[20px] font-[600]">
               <div className="min-w-0 flex-1 flex flex-col gap-[8px]">
                 <div>{t('post_preview', 'Post Preview')}</div>
@@ -574,10 +574,10 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                 <CloseIcon className="text-[#A3A3A3]" />
               </button>
             </div>
-            <div className="flex-1 relative min-h-[440px]">
+            <div className="flex-none min-h-[440px] xl:relative xl:flex-1">
               <Scrollable
                 scrollClasses="!pe-[20px]"
-                className="absolute top-0 p-[20px] pe-[8px] left-0 w-full h-full overflow-x-hidden overflow-y-scroll scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner"
+                className="relative min-h-[440px] h-auto p-[20px] pe-[8px] left-0 w-full overflow-x-hidden overflow-y-visible xl:absolute xl:top-0 xl:h-full xl:overflow-y-scroll scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner"
               >
                 <ShowAllProviders ref={ref} />
               </Scrollable>

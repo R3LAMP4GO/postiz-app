@@ -3,9 +3,113 @@ import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
 import { useMediaDirectory } from '@gitroom/react/helpers/use.media.directory';
 import { stripHtmlValidation } from '@gitroom/helpers/utils/strip.html.validation';
 import { textSlicer } from '@gitroom/helpers/utils/count.length';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import { VideoOrImage } from '@gitroom/react/helpers/video.or.image';
 import { SliderComponent } from '@gitroom/frontend/components/third-parties/slider.component';
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+
+const ReelAction: FC<{
+  label: string;
+  count?: string;
+  children: ReactNode;
+}> = ({ label, count, children }) => (
+  <div
+    className="flex flex-col items-center gap-[3px] text-white"
+    aria-hidden="true"
+  >
+    <span className="drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{children}</span>
+    {count && <span className="text-[11px] font-[600]">{count}</span>}
+    <span className="sr-only">{label}</span>
+  </div>
+);
+
+const InstagramReelPreview: FC<{
+  media: { path: string; thumbnail?: string };
+  caption: string;
+  integration?: { name?: string; picture?: string };
+  mediaDir: ReturnType<typeof useMediaDirectory>;
+}> = ({ media, caption, integration, mediaDir }) => (
+  <div className="flex justify-center">
+    <div className="relative h-[min(540px,calc(100dvh-260px))] aspect-[9/16] max-w-full overflow-hidden rounded-[10px] bg-[#272727] shadow-[0_12px_30px_rgba(0,0,0,0.28)]">
+      <a
+        href={mediaDir.set(media.path)}
+        target="_blank"
+        rel="noreferrer"
+        className="absolute inset-0"
+      >
+        <VideoOrImage
+          autoplay={false}
+          interactive
+          src={mediaDir.set(media.path)}
+          thumbnail={media.thumbnail}
+          imageClassName="object-cover"
+          videoClassName="object-cover"
+        />
+      </a>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/75" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-[14px] text-white">
+        <span className="rounded-full bg-black/35 px-[9px] py-[5px] text-[11px] font-[700] tracking-[0.08em]">
+          IG REEL
+        </span>
+        <span className="text-[20px] leading-none" aria-hidden="true">
+          ⋮
+        </span>
+      </div>
+      <div className="pointer-events-none absolute bottom-[82px] end-[12px] flex flex-col gap-[14px]">
+        <ReelAction label="Like" count="121">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[26px] w-[26px] fill-none stroke-current"
+            strokeWidth="1.8"
+          >
+            <path d="M20.8 8.7c0 5.4-8.8 10.1-8.8 10.1S3.2 14.1 3.2 8.7a4.7 4.7 0 0 1 8.8-2.3 4.7 4.7 0 0 1 8.8 2.3Z" />
+          </svg>
+        </ReelAction>
+        <ReelAction label="Comments" count="32">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[26px] w-[26px] fill-none stroke-current"
+            strokeWidth="1.8"
+          >
+            <path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.7 8.7 0 0 1-3.2-.6L4 20l1.5-3.7A7.2 7.2 0 0 1 4 11.5 7.5 7.5 0 0 1 12 4a7.5 7.5 0 0 1 8 7.5Z" />
+          </svg>
+        </ReelAction>
+        <ReelAction label="Share">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[26px] w-[26px] fill-none stroke-current"
+            strokeWidth="1.8"
+          >
+            <path d="m21 3-7.2 18-3.2-7.6L3 10.2 21 3Z" />
+            <path d="m10.6 13.4 4.2-4.2" />
+          </svg>
+        </ReelAction>
+        <ReelAction label="More actions">
+          <svg viewBox="0 0 24 24" className="h-[26px] w-[26px] fill-current">
+            <circle cx="12" cy="5" r="1.4" />
+            <circle cx="12" cy="12" r="1.4" />
+            <circle cx="12" cy="19" r="1.4" />
+          </svg>
+        </ReelAction>
+      </div>
+      <div className="pointer-events-none absolute inset-x-[14px] bottom-[14px] pe-[42px] text-white">
+        <div className="flex items-center gap-[8px]">
+          <img
+            src={integration?.picture || '/no-picture.jpg'}
+            alt=""
+            className="h-[30px] w-[30px] rounded-full border border-white/80 object-cover"
+          />
+          <span className="text-[13px] font-[700]">{integration?.name}</span>
+        </div>
+        <div
+          className="mt-[8px] line-clamp-2 text-[12px] leading-[16px]"
+          dangerouslySetInnerHTML={{ __html: caption }}
+        />
+        <div className="mt-[5px] text-[10px] opacity-85">Original audio</div>
+      </div>
+    </div>
+  </div>
+);
 
 export const InstagramPreview: FC<{
   maximumCharacters?: number;
@@ -47,6 +151,8 @@ export const InstagramPreview: FC<{
 
     return { text: finalValue, images: p.image };
   });
+  const media = renderContent?.[0]?.images || [];
+  const isReel = media.length === 1 && hasExtension(media[0]?.path, 'mp4');
   return (
     <div className="py-[10px] flex flex-col px-[15px] w-full gap-[10px] bg-bgInstagram rounded-[12px]">
       <div className="flex gap-[10px] items-center">
@@ -61,15 +167,23 @@ export const InstagramPreview: FC<{
           <div className="text-[15px] font-[600]">{integration?.name}</div>
         </div>
       </div>
-      {!!renderContent?.[0]?.images?.length ? (
+      {isReel ? (
+        <InstagramReelPreview
+          media={media[0]}
+          caption={renderContent?.[0]?.text || ''}
+          integration={integration}
+          mediaDir={mediaDir}
+        />
+      ) : media.length ? (
         <SliderComponent
-          className="h-[585px] rounded-[8px] overflow-hidden"
-          list={renderContent?.[0]?.images.map((image, index) => (
+          className="aspect-[4/5] max-h-[585px] rounded-[8px] overflow-hidden"
+          list={media.map((image, index) => (
             <a
-              key={`image_${index}`}
+              key={`${image.path}-${index}`}
               className="flex-1"
               href={mediaDir.set(image.path)}
               target="_blank"
+              rel="noreferrer"
             >
               <VideoOrImage
                 autoplay={false}
@@ -87,12 +201,20 @@ export const InstagramPreview: FC<{
         />
       )}
       <div
-        className="text-[14px] font-[400] whitespace-pre-line"
+        className={
+          isReel ? 'hidden' : 'text-[14px] font-[400] whitespace-pre-line'
+        }
         dangerouslySetInnerHTML={{
           __html: renderContent?.[0]?.text,
         }}
       />
-      <div className="py-[8px] text-textColor flex text-[14px] font-[700] gap-[10.5px]">
+      <div
+        className={
+          isReel
+            ? 'hidden'
+            : 'py-[8px] text-textColor flex text-[14px] font-[700] gap-[10.5px]'
+        }
+      >
         <div className="flex gap-[4px] items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"

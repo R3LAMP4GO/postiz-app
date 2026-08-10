@@ -5,6 +5,7 @@ import { FetchWrapperComponent } from '@gitroom/helpers/utils/custom.fetch';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 import { useReturnUrl } from '@gitroom/frontend/app/(app)/auth/return.url.component';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
+import { getOAuthLoginRedirect } from './oauth-callback';
 export default function LayoutContext(params: { children: ReactNode }) {
   if (params?.children) {
     // eslint-disable-next-line react/no-children-prop
@@ -61,7 +62,18 @@ function LayoutContextInner(params: { children: ReactNode }) {
       const reloadOrOnboarding =
         response?.headers?.get('reload') ||
         response?.headers?.get('onboarding');
+      const oauthLoginRedirect = getOAuthLoginRedirect(
+        window.location.pathname,
+        window.location.search,
+        response?.headers?.get('reload') === 'true'
+      );
       if (reloadOrOnboarding) {
+        if (oauthLoginRedirect) {
+          // The callback query would submit `/auth/oauth/*/exists` again after
+          // a reload, so leave the auth page once the cookie is set.
+          window.location.replace(oauthLoginRedirect);
+          return true;
+        }
         const getAndClear = returnUrl.getAndClear();
         if (getAndClear) {
           window.location.href = getAndClear;

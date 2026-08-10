@@ -412,8 +412,8 @@ export const EditorWrapper: FC<{
             className="min-h-[44px] w-full sm:w-auto shrink-0 rounded-[8px] bg-[#7F1D1D] px-[14px] text-[13px] font-[600] text-white outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444] focus-visible:ring-offset-2 focus-visible:ring-offset-newBgColor"
           >
             {t(
-              'customize_for_platform',
-              `Customize for ${internalFromAll?.identifier || 'platform'}`
+              'customize_platform_only',
+              `Customize ${internalFromAll?.identifier || 'platform'} only`
             )}
           </button>
         </div>

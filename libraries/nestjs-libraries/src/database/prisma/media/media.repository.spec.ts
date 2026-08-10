@@ -14,7 +14,8 @@ describe('MediaRepository', () => {
       'video.mp4',
       'https://staging.example.test/uploads/2026/08/07/video.mp4',
       144345115,
-      'staging-composer-upload.mp4'
+      'staging-composer-upload.mp4',
+      'https://staging.example.test/uploads/2026/08/07/video.mp4.jpg'
     );
 
     expect(create).toHaveBeenCalledWith(
@@ -23,6 +24,8 @@ describe('MediaRepository', () => {
           fileSize: 144345115,
           originalName: 'staging-composer-upload.mp4',
           path: 'https://staging.example.test/uploads/2026/08/07/video.mp4',
+          thumbnail:
+            'https://staging.example.test/uploads/2026/08/07/video.mp4.jpg',
         }),
       })
     );

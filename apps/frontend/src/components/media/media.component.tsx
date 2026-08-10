@@ -163,7 +163,11 @@ export const Pagination: FC<{
 export const ShowMediaBoxModal: FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [callBack, setCallBack] =
-    useState<(params: { id: string; path: string }[]) => void | undefined>();
+    useState<
+      (
+        params: { id: string; path: string; thumbnail?: string }[]
+      ) => void | undefined
+    >();
   const closeModal = useCallback(() => {
     setShowModal(false);
     setCallBack(undefined);
@@ -185,14 +189,16 @@ export const ShowMediaBoxModal: FC = () => {
   );
 };
 export const showMediaBox = (
-  callback: (params: { id: string; path: string }) => void
+  callback: (params: { id: string; path: string; thumbnail?: string }) => void
 ) => {
   showModalEmitter.emit('show-modal', callback);
 };
 const CHUNK_SIZE = 1024 * 1024;
 const MAX_UPLOAD_SIZE = 1024 * 1024 * 1024; // 1 GB
 export const MediaBox: FC<{
-  setMedia: (params: { id: string; path: string }[]) => void;
+  setMedia: (
+    params: { id: string; path: string; thumbnail?: string }[]
+  ) => void;
   standalone?: boolean;
   type?: 'image' | 'video';
   closeModal: () => void;
@@ -347,6 +353,7 @@ export const MediaBox: FC<{
               <VideoFrame
                 autoplay={true}
                 url={mediaDirectory.set(media.path)}
+                thumbnail={media.thumbnail}
               />
             ) : (
               <img
@@ -574,7 +581,10 @@ export const MediaBox: FC<{
                         </div>
                       </div>
                       {hasExtension(media.path, 'mp4') ? (
-                        <VideoFrame url={mediaDirectory.set(media.path)} />
+                        <VideoFrame
+                          url={mediaDirectory.set(media.path)}
+                          thumbnail={media.thumbnail}
+                        />
                       ) : (
                         <img
                           width="100%"
@@ -631,11 +641,13 @@ export const MultiMediaComponent: FC<{
     image?: Array<{
       id: string;
       path: string;
+      thumbnail?: string;
     }>;
   }[];
   value?: Array<{
     path: string;
     id: string;
+    thumbnail?: string;
   }>;
   text: string;
   name: string;
@@ -684,10 +696,12 @@ export const MultiMediaComponent: FC<{
         | {
             path: string;
             id: string;
+            thumbnail?: string;
           }
         | {
             path: string;
             id: string;
+            thumbnail?: string;
           }[]
     ) => {
       const mediaArray = Array.isArray(m) ? m : [m];
@@ -791,7 +805,10 @@ export const MultiMediaComponent: FC<{
 
                   <div className="w-full h-full relative">
                     {hasExtension(media?.path, 'mp4') ? (
-                      <VideoFrame url={mediaDirectory.set(media?.path)} />
+                      <VideoFrame
+                        url={mediaDirectory.set(media?.path)}
+                        thumbnail={media?.thumbnail}
+                      />
                     ) : (
                       <img
                         className="w-full h-full object-cover rounded-[4px]"

@@ -59,6 +59,7 @@ export const YoutubePreview: FC<{
             autoplay={false}
             interactive
             src={mediaDir.set(renderContent?.[0]?.images?.[0]?.path || '')}
+            thumbnail={renderContent?.[0]?.images?.[0]?.thumbnail}
           />
         )}
       </div>

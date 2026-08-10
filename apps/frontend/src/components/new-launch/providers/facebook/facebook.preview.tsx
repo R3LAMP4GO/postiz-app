@@ -180,6 +180,7 @@ export const FacebookPreview: FC<{
                 autoplay={false}
                 interactive
                 src={mediaDir.set(image.path)}
+                thumbnail={image.thumbnail}
               />
             </a>
           ))}
@@ -317,6 +318,7 @@ export const FacebookPreview: FC<{
                               autoplay={false}
                               interactive
                               src={mediaDir.set(image.path)}
+                              thumbnail={image.thumbnail}
                             />
                           </a>
                         ))}

@@ -11,7 +11,8 @@ export class MediaRepository {
     fileName: string,
     filePath: string,
     fileSize: number,
-    originalName?: string
+    originalName?: string,
+    thumbnail?: string
   ) {
     return this._media.model.media.create({
       data: {
@@ -24,6 +25,7 @@ export class MediaRepository {
         path: filePath,
         fileSize,
         originalName: originalName || null,
+        thumbnail: thumbnail || null,
       },
       select: {
         id: true,

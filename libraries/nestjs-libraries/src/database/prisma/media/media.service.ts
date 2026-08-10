@@ -62,14 +62,16 @@ export class MediaService {
     fileName: string,
     filePath: string,
     fileSize: number,
-    originalName?: string
+    originalName?: string,
+    thumbnail?: string
   ) {
     return this._mediaRepository.saveFile(
       org,
       fileName,
       filePath,
       fileSize,
-      originalName
+      originalName,
+      thumbnail
     );
   }
 

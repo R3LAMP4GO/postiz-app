@@ -332,7 +332,11 @@ export const LinkedinPreview: FC<{
               href={mediaDir.set(image.path)}
               target="_blank"
             >
-              <VideoOrImage autoplay={true} src={mediaDir.set(image.path)} />
+              <VideoOrImage
+                autoplay={true}
+                src={mediaDir.set(image.path)}
+                thumbnail={image.thumbnail}
+              />
             </a>
           ))}
         </div>

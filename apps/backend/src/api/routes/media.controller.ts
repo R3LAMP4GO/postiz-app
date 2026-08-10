@@ -25,6 +25,7 @@ import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { SaveMediaInformationDto } from '@gitroom/nestjs-libraries/dtos/media/save.media.information.dto';
 import { VideoDto } from '@gitroom/nestjs-libraries/dtos/videos/video.dto';
 import { VideoFunctionDto } from '@gitroom/nestjs-libraries/dtos/videos/video.function.dto';
+import { createVideoThumbnail } from '@gitroom/nestjs-libraries/upload/video.thumbnail';
 
 @ApiTags('Media')
 @Controller('/media')
@@ -34,6 +35,27 @@ export class MediaController {
     private _mediaService: MediaService,
     private _subscriptionService: SubscriptionService
   ) {}
+
+  private async uploadVideoThumbnail(file: Express.Multer.File) {
+    if (!file?.mimetype?.startsWith('video/')) {
+      return undefined;
+    }
+
+    const thumbnail = await createVideoThumbnail(file.buffer);
+    if (!thumbnail) {
+      return undefined;
+    }
+
+    try {
+      const uploadedThumbnail = await this.storage.uploadSimple(
+        `data:image/jpeg;base64,${thumbnail.toString('base64')}`
+      );
+      return uploadedThumbnail.path;
+    } catch (error) {
+      console.warn('Unable to upload a video thumbnail:', error);
+      return undefined;
+    }
+  }
 
   @Delete('/:id')
   deleteMedia(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
@@ -98,12 +120,14 @@ export class MediaController {
   ) {
     const originalName = file?.originalname || '';
     const uploadedFile = await this.storage.uploadFile(file);
+    const thumbnail = await this.uploadVideoThumbnail(file);
     return this._mediaService.saveFile(
       org.id,
       uploadedFile.originalname,
       uploadedFile.path,
       uploadedFile.size,
-      originalName
+      originalName,
+      thumbnail
     );
   }
 
@@ -151,12 +175,14 @@ export class MediaController {
       return { path };
     }
 
+    const thumbnail = await this.uploadVideoThumbnail(file);
     return this._mediaService.saveFile(
       org.id,
       getFile.originalname,
       getFile.path,
       getFile.size,
-      originalName
+      originalName,
+      thumbnail
     );
   }
 

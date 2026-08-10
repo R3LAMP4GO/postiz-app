@@ -7,6 +7,7 @@ ENV PNPM_HOME=/pnpm \
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       bash \
+      ffmpeg \
       g++ \
       make \
       nginx \

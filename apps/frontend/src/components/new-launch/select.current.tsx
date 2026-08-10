@@ -55,7 +55,7 @@ export const SelectCurrent: FC<{
       role="tablist"
       aria-label={ariaLabel}
       className={clsx(
-        'flex w-full gap-[8px] overflow-x-auto pb-[4px] scrollbar scrollbar-thumb-tableBorder scrollbar-track-secondary',
+        'flex min-w-0 w-full flex-wrap gap-[8px] overflow-hidden pb-[4px]',
         locked && 'opacity-60'
       )}
     >
@@ -68,7 +68,7 @@ export const SelectCurrent: FC<{
           <div
             key={integration.id}
             className={clsx(
-              'shrink-0 flex rounded-[8px] border bg-newBgLineColor',
+              'min-w-0 max-w-full flex rounded-[8px] border bg-newBgLineColor',
               selected ? 'border-[#EF4444]' : 'border-transparent'
             )}
           >

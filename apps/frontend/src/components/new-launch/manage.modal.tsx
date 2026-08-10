@@ -509,10 +509,10 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                         {t('content', 'Content')}
                       </h2>
                       <div className="flex flex-col gap-[10px]">
-                        <div>
+                        <div className="min-w-0">
                           {!existingData.integration && <SelectCurrent />}
                         </div>
-                        <div className="flex-1 flex">
+                        <div className="flex-1 flex min-w-0">
                           <EditorWrapper totalPosts={1} value="" />
                         </div>
                         <div id="social-empty" className="pb-[16px]" />
